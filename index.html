@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Müşteri Takip Sistemi</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13; --surface: #18181f; --surface2: #22222c;
+    --border: #2e2e3a; --text: #f0f0f5; --muted: #7a7a90;
+    --baslangic: #4ade80; --gelisme: #facc15; --premium: #f472b6;
+    --baslangic-bg: rgba(74,222,128,0.08); --gelisme-bg: rgba(250,204,21,0.08); --premium-bg: rgba(244,114,182,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header { padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface); }
+  header h1 { font-family: 'Playfair Display', serif; font-size: 22px; letter-spacing: -0.5px; }
+  header span { color: var(--muted); font-size: 13px; }
+
+  .container { display: grid; grid-template-columns: 340px 1fr; height: calc(100vh - 65px); }
+
+  .left-panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  .panel-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .panel-header h2 { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .btn-add { background: var(--text); color: var(--bg); border: none; padding: 8px 14px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .2s; }
+  .btn-add:hover { opacity: .85; }
+
+  .search-wrap { padding: 12px 20px; border-bottom: 1px solid var(--border); }
+  .search-wrap input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-wrap input:focus { border-color: var(--muted); }
+
+  .customer-list { overflow-y: auto; flex: 1; }
+  .customer-item { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; display: flex; align-items: center; gap: 12px; }
+  .customer-item:hover { background: var(--surface2); }
+  .customer-item.active { background: var(--surface2); border-left: 3px solid var(--text); }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .customer-info { flex: 1; min-width: 0; }
+  .customer-info .name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .customer-info .company { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
+  .badge.baslangic { background: var(--baslangic-bg); color: var(--baslangic); border: 1px solid rgba(74,222,128,0.25); }
+  .badge.gelisme { background: var(--gelisme-bg); color: var(--gelisme); border: 1px solid rgba(250,204,21,0.25); }
+  .badge.premium { background: var(--premium-bg); color: var(--premium); border: 1px solid rgba(244,114,182,0.25); }
+  .badge.yok { background: rgba(122,122,144,0.1); color: var(--muted); border: 1px solid rgba(122,122,144,0.25); }
+  .empty-list { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+
+  .right-panel { overflow-y: auto; }
+  .no-selection { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--muted); }
+  .no-selection .icon { font-size: 48px; opacity: .3; }
+  .no-selection p { font-size: 15px; }
+
+  .detail { padding: 32px; max-width: 760px; }
+  .detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; gap: 16px; }
+  .detail-header-left { display: flex; align-items: center; gap: 16px; }
+  .detail-avatar { width: 56px; height: 56px; border-radius: 50%; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .detail-name { font-family: 'Playfair Display', serif; font-size: 26px; line-height: 1.2; }
+  .detail-company { color: var(--muted); font-size: 14px; margin-top: 3px; }
+  .detail-actions { display: flex; gap: 8px; }
+  .btn-edit, .btn-delete { padding: 8px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); transition: all .15s; }
+  .btn-edit { background: var(--surface2); color: var(--text); }
+  .btn-edit:hover { border-color: var(--muted); }
+  .btn-delete { background: transparent; color: #f87171; border-color: rgba(248,113,113,0.3); }
+  .btn-delete:hover { background: rgba(248,113,113,0.1); }
+
+  .section-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+  .section-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title-row .section-title { margin-bottom: 0; }
+
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+  .meta-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .meta-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .meta-value { font-size: 14px; font-weight: 500; }
+
+  .packet-section { margin-bottom: 28px; }
+  .packet-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .packet-card { border: 2px solid var(--border); border-radius: 12px; padding: 16px; transition: all .2s; position: relative; overflow: hidden; }
+  .packet-card.locked { opacity: 0.35; cursor: not-allowed; }
+  .packet-card.selected.baslangic { border-color: var(--baslangic); background: var(--baslangic-bg); }
+  .packet-card.selected.gelisme { border-color: var(--gelisme); background: var(--gelisme-bg); }
+  .packet-card.selected.premium { border-color: var(--premium); background: var(--premium-bg); }
+  .packet-card-name { font-weight: 700; font-size: 15px; margin-bottom: 10px; }
+  .packet-card.selected.baslangic .packet-card-name { color: var(--baslangic); }
+  .packet-card.selected.gelisme .packet-card-name { color: var(--gelisme); }
+  .packet-card.selected.premium .packet-card-name { color: var(--premium); }
+  .packet-feature { font-size: 12px; color: var(--muted); line-height: 1.8; }
+  .check-icon { position: absolute; top: 12px; right: 12px; font-size: 16px; opacity: 0; transition: opacity .2s; }
+  .packet-card.selected .check-icon { opacity: 1; }
+
+  .services-section { margin-bottom: 28px; }
+  .service-grid { display: flex; flex-direction: column; gap: 8px; }
+  .service-row { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; transition: border-color .15s; }
+  .service-row:hover { border-color: var(--muted); }
+  .service-name { font-size: 14px; }
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+  .toggle-label { font-size: 12px; color: var(--muted); }
+  .toggle { width: 40px; height: 22px; background: var(--border); border-radius: 11px; position: relative; cursor: pointer; transition: background .2s; flex-shrink: 0; }
+  .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); transition: all .2s; }
+  .toggle.on { background: var(--baslangic); }
+  .toggle.on::after { left: 21px; background: #fff; }
+  .service-row.has-gelisme .toggle.on { background: var(--gelisme); }
+  .service-row.has-premium .toggle.on { background: var(--premium); }
+
+  .service-row.expandable { flex-direction: column; align-items: stretch; padding: 0; cursor: default; }
+  .service-row-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; user-select: none; }
+  .service-row-header:hover { background: rgba(255,255,255,0.03); border-radius: 10px; }
+  .service-row-left { display: flex; align-items: center; gap: 8px; }
+  .expand-arrow { font-size: 10px; color: var(--muted); transition: transform .2s; flex-shrink: 0; }
+  .service-progress { display: flex; align-items: center; gap: 10px; }
+  .prog-text { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .prog-bar { width: 80px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 3px; background: var(--baslangic); transition: width .3s; }
+  .has-gelisme .prog-fill { background: var(--gelisme); }
+  .has-premium .prog-fill { background: var(--premium); }
+  .service-row.all-done .service-name { color: var(--muted); text-decoration: line-through; }
+
+  .sub-items { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 16px 14px 32px; border-top: 1px solid var(--border); }
+  .sub-items.hidden { display: none; }
+  .sub-checkbox { display: flex; align-items: center; gap: 7px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 13px; transition: all .15s; user-select: none; }
+  .sub-checkbox input { display: none; }
+  .sub-checkbox::before { content: ''; width: 16px; height: 16px; border-radius: 4px; border: 2px solid var(--border); background: transparent; flex-shrink: 0; transition: all .15s; }
+  .sub-checkbox.checked { border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.06); }
+  .sub-checkbox.checked::before { background: var(--baslangic); border-color: var(--baslangic); content: '✓'; color: #000; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .service-row.expandable.has-gelisme .sub-checkbox.checked { border-color: rgba(250,204,21,0.3); background: rgba(250,204,21,0.06); }
+  .service-row.expandable.has-gelisme .sub-checkbox.checked::before { background: var(--gelisme); border-color: var(--gelisme); }
+  .service-row.expandable.has-premium .sub-checkbox.checked { border-color: rgba(244,114,182,0.3); background: rgba(244,114,182,0.06); }
+  .service-row.expandable.has-premium .sub-checkbox.checked::before { background: var(--premium); border-color: var(--premium); }
+
+  .extra-section { margin-bottom: 28px; }
+  .extra-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .extra-tag { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; cursor: pointer; font-size: 13px; background: var(--surface); transition: all .15s; user-select: none; }
+  .extra-tag:hover { border-color: var(--muted); }
+  .extra-tag.sold { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); color: var(--baslangic); }
+  .extra-check { font-size: 12px; font-weight: 700; width: 14px; }
+
+  .custom-section { margin-bottom: 28px; }
+  .btn-add-custom { font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 7px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); cursor: pointer; transition: border-color .15s; }
+  .btn-add-custom:hover { border-color: var(--muted); }
+  .custom-list { display: flex; flex-direction: column; gap: 8px; }
+  .empty-custom { font-size: 13px; color: var(--muted); padding: 8px 0; }
+  .custom-item { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 11px 16px; }
+  .custom-name { font-size: 14px; }
+  .btn-remove-custom { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 2px 6px; border-radius: 5px; transition: color .15s; }
+  .btn-remove-custom:hover { color: #f87171; }
+
+  .modal-extra-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .modal-extra-item { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); transition: border-color .15s; }
+  .modal-extra-item:hover { border-color: var(--muted); }
+  .modal-extra-item input[type="checkbox"] { accent-color: var(--baslangic); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+  .modal-extra-item.selected { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.06); }
+  .notes-area { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; resize: vertical; min-height: 100px; outline: none; transition: border-color .15s; }
+  .notes-area:focus { border-color: var(--muted); }
+  .btn-save-notes { margin-top: 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: border-color .15s; }
+  .btn-save-notes:hover { border-color: var(--muted); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 22px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .form-group input, .form-group select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color .15s; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--muted); }
+  .form-group select option { background: var(--surface2); }
+  .form-group select:disabled { opacity: 0.5; cursor: not-allowed; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+  .btn-cancel { padding: 10px 20px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
+  .btn-confirm { padding: 10px 20px; border-radius: 8px; background: var(--text); border: none; color: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+  .payment-section { margin-bottom: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+  .payment-section .section-title-row { margin-bottom: 0; }
+  .payment-body.hidden { display: none; }
+  .payment-body { display: block; }
+  .payment-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .pay-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+  .pay-stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .pay-stat-val { font-size: 16px; font-weight: 700; }
+  .pay-stat-val.green { color: var(--baslangic); }
+  .pay-stat-val.red { color: #f87171; }
+  .pay-stat-val.yellow { color: var(--gelisme); }
+  .payment-form { display: grid; grid-template-columns: 120px 1fr 1fr auto; gap: 8px; margin-bottom: 14px; align-items: end; }
+  .pay-input-wrap label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+  .pay-input-wrap input, .pay-input-wrap select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; transition: border-color .15s; }
+  .pay-input-wrap input:focus, .pay-input-wrap select:focus { border-color: var(--muted); }
+  .pay-input-wrap select option { background: var(--surface2); }
+  .btn-add-pay { background: var(--baslangic); color: #000; border: none; padding: 9px 16px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: opacity .2s; align-self: end; }
+  .btn-add-pay:hover { opacity: .85; }
+  .payment-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+  .empty-payments { font-size: 13px; color: var(--muted); padding: 8px 0; }
+  .payment-item { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; gap: 12px; }
+  .payment-item-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .pay-method-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .pay-method-badge.nakit { background: rgba(74,222,128,0.12); color: var(--baslangic); border: 1px solid rgba(74,222,128,0.2); }
+  .pay-method-badge.havale { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.2); }
+  .pay-method-badge.kart { background: rgba(244,114,182,0.12); color: var(--premium); border: 1px solid rgba(244,114,182,0.2); }
+  .pay-date { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .pay-note { font-size: 12px; color: var(--muted); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+  .pay-amount { font-size: 15px; font-weight: 700; color: var(--baslangic); white-space: nowrap; }
+  .btn-remove-pay { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 2px 6px; border-radius: 5px; transition: color .15s; flex-shrink: 0; }
+  .btn-remove-pay:hover { color: #f87171; }
+
+  .yeni-fatura-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 14px; align-items: end; }
+  .fatura-list { display: flex; flex-direction: column; gap: 8px; }
+  .fatura-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .fatura-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; cursor: pointer; user-select: none; transition: background .15s; }
+  .fatura-header:hover { background: rgba(255,255,255,0.03); }
+  .fatura-header-left { display: flex; align-items: center; gap: 10px; }
+  .fatura-header-right { display: flex; align-items: center; gap: 10px; }
+  .fatura-arrow { font-size: 10px; color: var(--muted); transition: transform .2s; }
+  .fatura-ay { font-size: 14px; font-weight: 600; }
+  .fatura-durum { font-size: 11px; font-weight: 600; }
+  .fatura-tutar { font-size: 14px; font-weight: 700; color: var(--gelisme); }
+  .fatura-kalan { font-size: 12px; color: #f87171; }
+  .fatura-body { padding: 0 14px 14px; border-top: 1px solid var(--border); }
+  .fatura-body.hidden { display: none; }
+  .odeme-form { display: grid; grid-template-columns: 120px 1fr 1fr auto; gap: 8px; margin: 12px 0 8px; align-items: end; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Müşteri Takip Sistemi</h1>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span id="sync-status" style="font-size:12px;color:var(--baslangic);transition:opacity .5s;opacity:0"></span>
+    <span id="customer-count">0 müşteri</span>
+  </div>
+</header>
+
+<div class="container">
+  <div class="left-panel">
+    <div class="panel-header">
+      <h2>Müşteriler</h2>
+      <button class="btn-add" onclick="openAddModal()">+ Yeni Ekle</button>
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="search-input" placeholder="Müşteri ara..." oninput="renderList()">
+    </div>
+    <div class="customer-list" id="customer-list">
+      <div class="empty-list">Henüz müşteri eklenmedi.</div>
+    </div>
+  </div>
+  <div class="right-panel" id="right-panel">
+    <div class="no-selection">
+      <div class="icon">👤</div>
+      <p>Detayları görmek için bir müşteri seçin</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">Yeni Müşteri</h2>
+    <div class="form-group"><label>Ad Soyad *</label><input type="text" id="f-name" placeholder="Örn: Ahmet Yılmaz"></div>
+    <div class="form-group"><label>Firma / Marka Adı</label><input type="text" id="f-company" placeholder="Örn: Yılmaz Cafe"></div>
+    <div class="form-group"><label>Telefon</label><input type="text" id="f-phone" placeholder="05xx xxx xx xx"></div>
+    <div class="form-group"><label>E-posta</label><input type="text" id="f-email" placeholder="ornek@email.com"></div>
+    <div class="form-group"><label>Paket</label>
+      <select id="f-packet">
+        <option value="yok">— Paket Yok —</option>
+        <option value="baslangic">Başlangıç</option>
+        <option value="gelisme">Gelişme</option>
+        <option value="premium">Premium</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Ek Hizmetler</label>
+      <div class="modal-extra-list" id="modal-extra-list">
+        <label class="modal-extra-item"><input type="checkbox" value="0" onchange="syncExtraStyle(this)"> Konseptli Modelli Çekim</label>
+        <label class="modal-extra-item"><input type="checkbox" value="1" onchange="syncExtraStyle(this)"> Drone Çekimi</label>
+        <label class="modal-extra-item"><input type="checkbox" value="2" onchange="syncExtraStyle(this)"> Drone Çekimli Tanıtım Videosu</label>
+        <label class="modal-extra-item"><input type="checkbox" value="3" onchange="syncExtraStyle(this)"> Drone Çekimli Tanıtım Videosu + Konseptli Modelli Çekim</label>
+        <label class="modal-extra-item"><input type="checkbox" value="4" onchange="syncExtraStyle(this)"> Web Sitesi Tasarımı</label>
+      </div>
+    </div>
+    <div class="form-group"><label>Başlangıç Tarihi</label><input type="date" id="f-date"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">İptal</button>
+      <button class="btn-confirm" onclick="saveCustomer()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var PACKETS = {
+  baslangic: {
+    label: 'Başlangıç',
+    services: [
+      { name: 'Facebook Hesap Yönetimi', count: null },
+      { name: 'Instagram Hesap Yönetimi', count: null },
+      { name: 'Post Tasarımı ve Fotoğraf Çekimi', count: 8 },
+      { name: 'Reels Tasarımı (Video Çekimi)', count: 1 },
+      { name: 'Önemli Gün Tasarımları', count: null },
+      { name: 'Aylık Raporlama', count: null },
+      { name: 'Yankı Gazetesi Sosyal Platform Reklamı', count: 4 }
+    ]
+  },
+  gelisme: {
+    label: 'Gelişme',
+    services: [
+      { name: 'Facebook Hesap Yönetimi', count: null },
+      { name: 'Instagram Hesap Yönetimi', count: null },
+      { name: 'Post Tasarımı ve Fotoğraf Çekimi', count: 12 },
+      { name: 'Reels Tasarımı (Video Çekimi)', count: 2 },
+      { name: 'Önemli Gün Tasarımları', count: null },
+      { name: 'Aylık Raporlama', count: null },
+      { name: 'Yankı Gazetesi Sosyal Platform Reklamı', count: 8 }
+    ]
+  },
+  premium: {
+    label: 'Premium',
+    services: [
+      { name: 'Facebook Hesap Yönetimi', count: null },
+      { name: 'Instagram Hesap Yönetimi', count: null },
+      { name: 'Tiktok Hesap Yönetimi', count: null },
+      { name: 'Post Tasarımı ve Fotoğraf Çekimi', count: 16 },
+      { name: 'Reels Tasarımı (Video Çekimi)', count: 4 },
+      { name: 'Önemli Gün Tasarımları', count: null },
+      { name: 'Aylık Raporlama', count: null },
+      { name: 'Aylık Toplantı', count: null },
+      { name: 'Yankı Gazetesi Sosyal Platform Reklamı', count: 20 },
+      { name: 'Meta Reklam Yönetimi', count: null }
+    ]
+  }
+};
+
+var EXTRA_SERVICES = [
+  'Konseptli Modelli Çekim',
+  'Drone Çekimi',
+  'Drone Çekimli Tanıtım Videosu',
+  'Drone Çekimli Tanıtım Videosu + Konseptli Modelli Çekim',
+  'Web Sitesi Tasarımı'
+];
+
+var COLORS = ['#4ade80','#facc15','#f472b6','#60a5fa','#fb923c','#a78bfa','#34d399'];
+
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyO5q7uGiP4dRNVyT9qhrSiQj9SbsiqPYSdjn8dhmSarZoYRKVQulyJLcIP7ZQj2MCG/exec';
+
+var customers = JSON.parse(localStorage.getItem('sm_customers') || '[]');
+var selectedId = null;
+var editingId = null;
+var isSyncing = false;
+
+function save() {
+  localStorage.setItem('sm_customers', JSON.stringify(customers));
+  syncToSheets();
+}
+
+function syncToSheets() {
+  if (isSyncing) return;
+  isSyncing = true;
+  showSyncStatus('⏳ Kaydediliyor...');
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'save', customers: customers })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    isSyncing = false;
+    if (d.success) showSyncStatus('✓ Kaydedildi', true);
+    else showSyncStatus('⚠ Hata!');
+  })
+  .catch(function(){
+    isSyncing = false;
+    showSyncStatus('⚠ Bağlantı hatası');
+  });
+}
+
+function loadFromSheets() {
+  showSyncStatus('⏳ Yükleniyor...');
+  fetch(SCRIPT_URL + '?action=load')
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.success && d.customers) {
+      customers = d.customers;
+      localStorage.setItem('sm_customers', JSON.stringify(customers));
+      renderList();
+      showSyncStatus('✓ Senkronize edildi', true);
+    }
+  })
+  .catch(function(){
+    showSyncStatus('⚠ Bağlantı hatası, yerel veri kullanılıyor');
+  });
+}
+
+function showSyncStatus(msg, autoHide) {
+  var el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = '1';
+  if (autoHide) {
+    setTimeout(function(){ el.style.opacity = '0'; }, 2000);
+  }
+}
+
+function getInitials(name) {
+  return name.split(' ').slice(0,2).map(function(w){ return w[0] ? w[0].toUpperCase() : ''; }).join('');
+}
+
+function getColor(id) {
+  var idx = customers.findIndex(function(c){ return c.id === id; });
+  return COLORS[idx % COLORS.length];
+}
+
+function calcTotal(c) {
+  if (c.packet === 'yok') return 0;
+  var total = 0;
+  PACKETS[c.packet].services.forEach(function(s){ total += s.count ? s.count : 1; });
+  return total;
+}
+
+function calcCompleted(c) {
+  if (c.packet === 'yok') return 0;
+  var done = 0;
+  PACKETS[c.packet].services.forEach(function(s, i) {
+    if (s.count) {
+      var subs = (c.subItems && c.subItems[i]) ? c.subItems[i] : {};
+      done += Object.values(subs).filter(Boolean).length;
+    } else {
+      if ((c.services || {})[i]) done++;
+    }
+  });
+  return done;
+}
+
+function getSubLabel(s, packet, j) {
+  if (s.name.indexOf('Post') !== -1) return 'Post ' + (j+1);
+  if (s.name.indexOf('Reels') !== -1) return 'Reels ' + (j+1);
+  if (s.name.indexOf('Reklam') !== -1) {
+    if (packet === 'baslangic') return (j+1) + '. Hafta';
+    if (packet === 'gelisme') return (Math.floor(j/2)+1) + '. Hafta ' + ((j%2)+1) + '. Reklam';
+    return (Math.floor(j/5)+1) + '. Hafta ' + ((j%5)+1) + '. Reklam';
+  }
+  return String(j+1);
+}
+
+function renderList() {
+  var q = document.getElementById('search-input').value.toLowerCase();
+  var list = document.getElementById('customer-list');
+  var filtered = customers.filter(function(c){
+    return c.name.toLowerCase().indexOf(q) !== -1 || (c.company||'').toLowerCase().indexOf(q) !== -1;
+  });
+  document.getElementById('customer-count').textContent = customers.length + ' müşteri';
+  if (!filtered.length) { list.innerHTML = '<div class="empty-list">Müşteri bulunamadı.</div>'; return; }
+  var html = '';
+  filtered.forEach(function(c) {
+    var color = getColor(c.id);
+    html += '<div class="customer-item ' + (selectedId===c.id?'active':'') + '" onclick="selectCustomer(\'' + c.id + '\')">';
+    html += '<div class="avatar" style="background:' + color + '22;color:' + color + '">' + getInitials(c.name) + '</div>';
+    html += '<div class="customer-info"><div class="name">' + c.name + '</div><div class="company">' + (c.company||'—') + '</div></div>';
+    html += '<span class="badge ' + c.packet + '">' + (c.packet === 'yok' ? 'Paketsiz' : PACKETS[c.packet].label) + '</span>';
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function selectCustomer(id) {
+  selectedId = id;
+  renderList();
+  renderDetail();
+}
+
+function renderDetail() {
+  var c = customers.find(function(c){ return c.id === selectedId; });
+  if (!c) {
+    document.getElementById('right-panel').innerHTML = '<div class="no-selection"><div class="icon">👤</div><p>Detayları görmek için bir müşteri seçin</p></div>';
+    return;
+  }
+  var color = getColor(c.id);
+  var pkt = c.packet !== 'yok' ? PACKETS[c.packet] : null;
+  var pktLabel = c.packet !== 'yok' ? pkt.label : 'Paketsiz';
+
+  // Paket kartları
+  var packetCards = '';
+  Object.keys(PACKETS).forEach(function(key) {
+    var p = PACKETS[key];
+    var cls = c.packet === key ? 'selected' : 'locked';
+    packetCards += '<div class="packet-card ' + key + ' ' + cls + '">';
+    packetCards += '<div class="packet-card-name">' + p.label + '</div>';
+    packetCards += '<div class="packet-feature">' + p.services.slice(0,3).map(function(s){ return s.name; }).join('<br>') + '</div>';
+    packetCards += '<span class="check-icon">✓</span></div>';
+  });
+
+  // Hizmet satırları (sadece paketli müşterilerde)
+  var serviceRows = '';
+  if (pkt) {
+    pkt.services.forEach(function(s, i) {
+      if (s.count) {
+        var subs = (c.subItems && c.subItems[i]) ? c.subItems[i] : {};
+        var doneCount = Object.values(subs).filter(Boolean).length;
+        var allDone = doneCount === s.count;
+        var checkboxes = '';
+        for (var j = 0; j < s.count; j++) {
+          var checked = subs[j] || false;
+          var lbl = getSubLabel(s, c.packet, j);
+          checkboxes += '<label class="sub-checkbox ' + (checked?'checked':'') + '">';
+          checkboxes += '<input type="checkbox" ' + (checked?'checked':'') + ' onchange="toggleSubItem(\'' + c.id + '\',' + i + ',' + j + ',this.checked)">';
+          checkboxes += '<span>' + lbl + '</span></label>';
+        }
+        serviceRows += '<div class="service-row has-' + c.packet + ' expandable ' + (allDone?'all-done':'') + '">';
+        serviceRows += '<div class="service-row-header" onclick="toggleExpand(this)">';
+        serviceRows += '<div class="service-row-left"><span class="expand-arrow">▶</span><span class="service-name">' + s.count + ' ' + s.name + '</span></div>';
+        serviceRows += '<div class="service-progress"><span class="prog-text">' + doneCount + '/' + s.count + '</span>';
+        serviceRows += '<div class="prog-bar"><div class="prog-fill" style="width:' + Math.round(doneCount/s.count*100) + '%"></div></div></div>';
+        serviceRows += '</div>';
+        serviceRows += '<div class="sub-items hidden">' + checkboxes + '</div>';
+        serviceRows += '</div>';
+      } else {
+        var done = (c.services||{})[i] || false;
+        serviceRows += '<div class="service-row has-' + c.packet + '">';
+        serviceRows += '<span class="service-name">' + s.name + '</span>';
+        serviceRows += '<div class="toggle-wrap"><span class="toggle-label">' + (done?'Tamamlandı':'Bekliyor') + '</span>';
+        serviceRows += '<div class="toggle ' + (done?'on':'') + '" onclick="toggleService(\'' + c.id + '\',' + i + ')"></div></div>';
+        serviceRows += '</div>';
+      }
+    });
+  }
+
+  // Ek hizmetler
+  var extraHTML = '';
+  EXTRA_SERVICES.forEach(function(es, ei) {
+    var sold = (c.extraServices && c.extraServices[ei]) || false;
+    extraHTML += '<div class="extra-tag ' + (sold?'sold':'') + '" onclick="toggleExtra(\'' + c.id + '\',' + ei + ')">';
+    extraHTML += '<span class="extra-check">' + (sold?'✓':'') + '</span><span>' + es + '</span></div>';
+  });
+
+  // Özel hizmetler
+  var customList = '';
+  if (!c.customServices || c.customServices.length === 0) {
+    customList = '<div class="empty-custom">Henüz özel hizmet eklenmedi.</div>';
+  } else {
+    c.customServices.forEach(function(cs, ci) {
+      customList += '<div class="custom-item"><span class="custom-name">' + cs + '</span>';
+      customList += '<button class="btn-remove-custom" onclick="removeCustomService(\'' + c.id + '\',' + ci + ')">✕</button></div>';
+    });
+  }
+
+  var html = '<div class="detail">';
+  html += '<div class="detail-header"><div class="detail-header-left">';
+  html += '<div class="detail-avatar" style="background:' + color + '22;color:' + color + '">' + getInitials(c.name) + '</div>';
+  html += '<div><div class="detail-name">' + c.name + '</div>';
+  html += '<div class="detail-company">' + (c.company||'') + (c.phone?' • '+c.phone:'') + (c.email?' • '+c.email:'') + '</div></div>';
+  html += '</div><div class="detail-actions">';
+  html += '<button class="btn-edit" onclick="openEditModal(\'' + c.id + '\')">Düzenle</button>';
+  html += '<button class="btn-delete" onclick="deleteCustomer(\'' + c.id + '\')">Sil</button>';
+  html += '</div></div>';
+  html += '<div class="meta-grid">';
+  html += '<div class="meta-item"><div class="meta-label">Paket</div><div class="meta-value"><span class="badge ' + c.packet + '">' + pktLabel + '</span></div></div>';
+  html += '<div class="meta-item"><div class="meta-label">Başlangıç Tarihi</div><div class="meta-value">' + (c.date||'—') + '</div></div>';
+  if (c.packet !== 'yok') {
+    html += '<div class="meta-item"><div class="meta-label">Tamamlanan</div><div class="meta-value" id="meta-done">' + calcCompleted(c) + ' / ' + calcTotal(c) + '</div></div>';
+    html += '<div class="meta-item"><div class="meta-label">İlerleme</div><div class="meta-value" id="meta-pct">' + Math.round(calcCompleted(c)/calcTotal(c)*100) + '%</div></div>';
+  }
+  html += '</div>';
+  if (c.packet !== 'yok') {
+    html += '<div class="packet-section"><div class="section-title">Paket Seçimi</div><div class="packet-cards">' + packetCards + '</div></div>';
+    html += '<div class="services-section"><div class="section-title">Hizmet Takibi</div><div class="service-grid">' + serviceRows + '</div></div>';
+  }
+  html += '<div class="extra-section"><div class="section-title">Ek Hizmetler</div><div class="extra-grid">' + extraHTML + '</div></div>';
+  html += '<div class="custom-section"><div class="section-title-row"><div class="section-title">Özel Hizmetler</div>';
+  html += '<button class="btn-add-custom" onclick="addCustomService(\'' + c.id + '\')">+ Ekle</button></div>';
+  html += '<div class="custom-list">' + customList + '</div></div>';
+  // Ödeme takibi - aylık fatura sistemi
+  var faturalar = c.faturalar || [];
+  var toplamBorc = faturalar.reduce(function(s,f){ return s + f.tutar; }, 0);
+  var toplamOdenen = faturalar.reduce(function(s,f){
+    return s + (f.odemeler||[]).reduce(function(s2,o){ return s2 + o.tutar; }, 0);
+  }, 0);
+  var toplamKalan = toplamBorc - toplamOdenen;
+
+  var AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  var ayOptions = '';
+  for (var mm = 0; mm < 12; mm++) {
+    var val = '2026-' + String(mm+1).padStart(2,'0');
+    ayOptions += '<option value="' + val + '">' + AYLAR[mm] + ' 2026</option>';
+  }
+  var defaultAy = '2026-' + String(new Date().getMonth()+1).padStart(2,'0');
+
+  // Fatura satırları
+  var faturaHTML = '';
+  if (faturalar.length === 0) {
+    faturaHTML = '<div class="empty-payments">Henüz fatura eklenmedi.</div>';
+  } else {
+    var sortedF = faturalar.slice().sort(function(a,b){ return b.ay.localeCompare(a.ay); });
+    sortedF.forEach(function(f) {
+      var fi = faturalar.indexOf(f);
+      var odenen = (f.odemeler||[]).reduce(function(s,o){ return s + o.tutar; }, 0);
+      var kalan = f.tutar - odenen;
+      var durum = kalan <= 0 ? 'odendi' : (odenen > 0 ? 'kismi' : 'bekliyor');
+      var durumLabel = kalan <= 0 ? '✓ Ödendi' : (odenen > 0 ? '≈ Kısmi' : '● Bekliyor');
+      var durumColor = kalan <= 0 ? 'var(--baslangic)' : (odenen > 0 ? 'var(--gelisme)' : '#f87171');
+      var ayParts = f.ay.split('-');
+      var ayLabel = AYLAR[parseInt(ayParts[1])-1] + ' ' + ayParts[0];
+
+      faturaHTML += '<div class="fatura-item">';
+      faturaHTML += '<div class="fatura-header" onclick="toggleFatura(this)">';
+      faturaHTML += '<div class="fatura-header-left">';
+      faturaHTML += '<span class="fatura-arrow">▶</span>';
+      faturaHTML += '<span class="fatura-ay">' + ayLabel + '</span>';
+      faturaHTML += '<span class="fatura-durum" style="color:' + (kalan<=0?'var(--baslangic)':odenen>0?'var(--gelisme)':'#f87171') + '">' + durumLabel + '</span>';
+      faturaHTML += '</div>';
+      faturaHTML += '<div class="fatura-header-right">';
+      faturaHTML += '<span class="fatura-tutar">' + formatMoney(f.tutar) + ' ₺</span>';
+      if (kalan > 0) faturaHTML += '<span class="fatura-kalan">Kalan: ' + formatMoney(kalan) + ' ₺</span>';
+      faturaHTML += '<button class="btn-remove-pay" onclick="removeFatura(\'' + c.id + '\',' + fi + ');event.stopPropagation()">✕</button>';
+      faturaHTML += '</div></div>';
+
+      // Ödeme listesi + ekleme formu
+      faturaHTML += '<div class="fatura-body hidden">';
+      // Mevcut ödemeler
+      if ((f.odemeler||[]).length > 0) {
+        f.odemeler.forEach(function(o, oi) {
+          faturaHTML += '<div class="payment-item">';
+          faturaHTML += '<div class="payment-item-left">';
+          faturaHTML += '<span class="pay-method-badge ' + o.yontem + '">' + o.yontem + '</span>';
+          faturaHTML += '<span class="pay-date">' + formatDate(o.tarih) + '</span>';
+          if (o.not) faturaHTML += '<span class="pay-note">' + o.not + '</span>';
+          faturaHTML += '</div>';
+          faturaHTML += '<span class="pay-amount">+' + formatMoney(o.tutar) + ' ₺</span>';
+          faturaHTML += '<button class="btn-remove-pay" onclick="removeOdeme(\'' + c.id + '\',' + fi + ',' + oi + ')">✕</button>';
+          faturaHTML += '</div>';
+        });
+      } else {
+        faturaHTML += '<div class="empty-payments" style="padding:8px 16px">Bu ay için ödeme yok.</div>';
+      }
+      // Ödeme ekleme formu
+      faturaHTML += '<div class="odeme-form">';
+      faturaHTML += '<div class="pay-input-wrap"><label>Tarih</label><input type="date" id="otarih-' + fi + '" value="' + new Date().toISOString().split('T')[0] + '"></div>';
+      faturaHTML += '<div class="pay-input-wrap"><label>Tutar (₺)</label><input type="number" id="otutar-' + fi + '" placeholder="0" min="0"></div>';
+      faturaHTML += '<div class="pay-input-wrap"><label>Yöntem</label><select id="oyontem-' + fi + '"><option value="nakit">Nakit</option><option value="havale">Havale/EFT</option><option value="kart">Kart</option></select></div>';
+      faturaHTML += '<button class="btn-add-pay" onclick="addOdeme(\'' + c.id + '\',' + fi + ')">+ Ödeme Ekle</button>';
+      faturaHTML += '</div>';
+      faturaHTML += '<div class="pay-input-wrap" style="padding:0 0 12px 0"><label>Not</label><input type="text" id="onot-' + fi + '" placeholder="Opsiyonel not"></div>';
+      faturaHTML += '</div>'; // fatura-body
+      faturaHTML += '</div>'; // fatura-item
+    });
+  }
+
+  html += '<div class="payment-section">';
+  html += '<div class="section-title-row" style="cursor:pointer" onclick="togglePaymentSection(this)">';
+  html += '<div class="section-title" style="margin-bottom:0">💰 Ödeme Takibi</div>';
+  html += '<span class="pay-toggle-arrow" style="font-size:12px;color:var(--muted);transition:transform .2s">▶</span>';
+  html += '</div>';
+  html += '<div class="payment-body hidden">';
+  html += '<div style="height:14px"></div>';
+  // Özet
+  html += '<div class="payment-summary">';
+  html += '<div class="pay-stat"><div class="pay-stat-label">Toplam Fatura</div><div class="pay-stat-val yellow">' + formatMoney(toplamBorc) + ' ₺</div></div>';
+  html += '<div class="pay-stat"><div class="pay-stat-label">Toplam Ödenen</div><div class="pay-stat-val green">' + formatMoney(toplamOdenen) + ' ₺</div></div>';
+  html += '<div class="pay-stat"><div class="pay-stat-label">Toplam Kalan</div><div class="pay-stat-val ' + (toplamKalan > 0 ? 'red' : 'green') + '">' + formatMoney(toplamKalan) + ' ₺</div></div>';
+  html += '</div>';
+  // Yeni fatura ekleme
+  html += '<div class="yeni-fatura-form">';
+  html += '<div class="pay-input-wrap"><label>Ay</label><select id="fatura-ay">' + ayOptions + '</select></div>';
+  html += '<div class="pay-input-wrap"><label>Tutar (₺)</label><input type="number" id="fatura-tutar" placeholder="0" min="0"></div>';
+  html += '<button class="btn-add-pay" onclick="addFatura(\'' + c.id + '\')">+ Fatura Ekle</button>';
+  html += '</div>';
+  // Faturalar listesi
+  html += '<div class="fatura-list">' + faturaHTML + '</div>';
+  html += '</div></div>';
+
+  html += '<div class="notes-section"><div class="section-title">Notlar</div>';
+  html += '<textarea class="notes-area" id="notes-' + c.id + '" placeholder="Müşteri notları...">' + (c.notes||'') + '</textarea>';
+  html += '<button class="btn-save-notes" onclick="saveNotes(\'' + c.id + '\')">Notu Kaydet</button></div>';
+  html += '</div>';
+
+  document.getElementById('right-panel').innerHTML = html;
+}
+
+function togglePaymentSection(header) {
+  var body = header.parentElement.querySelector('.payment-body');
+  var arrow = header.querySelector('.pay-toggle-arrow');
+  body.classList.toggle('hidden');
+  arrow.style.transform = body.classList.contains('hidden') ? '' : 'rotate(90deg)';
+}
+
+function formatMoney(n) {
+  return Number(n || 0).toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+}
+
+function formatDate(str) {
+  if (!str) return '';
+  var p = str.split('-');
+  return p[2] + '.' + p[1] + '.' + p[0];
+}
+
+
+function addFatura(id) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c) return;
+  var ay = document.getElementById('fatura-ay').value;
+  var tutar = parseFloat(document.getElementById('fatura-tutar').value);
+  if (!ay || !tutar || tutar <= 0) { alert('Ay ve tutar zorunludur.'); return; }
+  if (!c.faturalar) c.faturalar = [];
+  var existing = c.faturalar.find(function(f){ return f.ay === ay; });
+  if (existing) { alert('Bu ay için zaten fatura var!'); return; }
+  c.faturalar.push({ ay: ay, tutar: tutar, odemeler: [] });
+  save(); renderDetail();
+}
+
+function removeFatura(id, idx) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c) return;
+  if (!confirm('Bu fatura ve tüm ödemeleri silinsin mi?')) return;
+  c.faturalar.splice(idx, 1);
+  save(); renderDetail();
+}
+
+function addOdeme(id, fi) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c || !c.faturalar[fi]) return;
+  var tarih = document.getElementById('otarih-' + fi).value;
+  var tutar = parseFloat(document.getElementById('otutar-' + fi).value);
+  var yontem = document.getElementById('oyontem-' + fi).value;
+  var not = document.getElementById('onot-' + fi).value.trim();
+  if (!tarih || !tutar || tutar <= 0) { alert('Tarih ve tutar zorunludur.'); return; }
+  if (!c.faturalar[fi].odemeler) c.faturalar[fi].odemeler = [];
+  c.faturalar[fi].odemeler.push({ tarih: tarih, tutar: tutar, yontem: yontem, not: not });
+  save(); renderDetail();
+}
+
+function removeOdeme(id, fi, oi) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c || !c.faturalar[fi]) return;
+  c.faturalar[fi].odemeler.splice(oi, 1);
+  save(); renderDetail();
+}
+
+function toggleFatura(header) {
+  var body = header.parentElement.querySelector('.fatura-body');
+  var arrow = header.querySelector('.fatura-arrow');
+  body.classList.toggle('hidden');
+  arrow.style.transform = body.classList.contains('hidden') ? '' : 'rotate(90deg)';
+}
+
+function syncExtraStyle(cb) {
+  cb.parentElement.classList.toggle('selected', cb.checked);
+}
+
+function toggleService(id, idx) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c) return;
+  if (!c.services) c.services = {};
+  c.services[idx] = !c.services[idx];
+  save(); renderDetail();
+}
+
+function toggleSubItem(id, svcIdx, subIdx, checked) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c) return;
+  if (!c.subItems) c.subItems = {};
+  if (!c.subItems[svcIdx]) c.subItems[svcIdx] = {};
+  c.subItems[svcIdx][subIdx] = checked;
+  save();
+  var pkt = PACKETS[c.packet];
+  var s = pkt.services[svcIdx];
+  var subs = c.subItems[svcIdx] || {};
+  var doneCount = Object.values(subs).filter(Boolean).length;
+  var rows = document.querySelectorAll('.service-row.expandable');
+  var ei = 0;
+  pkt.services.forEach(function(sv, i) {
+    if (!sv.count) return;
+    if (i === svcIdx && rows[ei]) {
+      rows[ei].querySelector('.prog-text').textContent = doneCount + '/' + s.count;
+      rows[ei].querySelector('.prog-fill').style.width = Math.round(doneCount/s.count*100) + '%';
+      rows[ei].classList.toggle('all-done', doneCount === s.count);
+      rows[ei].querySelectorAll('.sub-checkbox').forEach(function(lbl, j) {
+        lbl.classList.toggle('checked', !!(subs[j]));
+      });
+    }
+    ei++;
+  });
+  var metaDone = document.getElementById('meta-done');
+  var metaPct = document.getElementById('meta-pct');
+  if (metaDone) metaDone.textContent = calcCompleted(c) + ' / ' + calcTotal(c);
+  if (metaPct) metaPct.textContent = (calcTotal(c) ? Math.round(calcCompleted(c)/calcTotal(c)*100) : 0) + '%';
+}
+
+function toggleExpand(header) {
+  var row = header.parentElement;
+  var sub = row.querySelector('.sub-items');
+  var arrow = header.querySelector('.expand-arrow');
+  sub.classList.toggle('hidden');
+  arrow.style.transform = sub.classList.contains('hidden') ? '' : 'rotate(90deg)';
+}
+
+function toggleExtra(id, idx) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c) return;
+  if (!c.extraServices) c.extraServices = {};
+  c.extraServices[idx] = !c.extraServices[idx];
+  save();
+  var tags = document.querySelectorAll('.extra-tag');
+  if (tags[idx]) {
+    tags[idx].classList.toggle('sold', !!c.extraServices[idx]);
+    tags[idx].querySelector('.extra-check').textContent = c.extraServices[idx] ? '✓' : '';
+  }
+}
+
+function addCustomService(id) {
+  var name = prompt('Özel hizmet adını girin:');
+  if (!name || !name.trim()) return;
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c) return;
+  if (!c.customServices) c.customServices = [];
+  c.customServices.push(name.trim());
+  save(); renderDetail();
+}
+
+function removeCustomService(id, idx) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c) return;
+  c.customServices.splice(idx, 1);
+  save(); renderDetail();
+}
+
+function saveNotes(id) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c) return;
+  c.notes = document.getElementById('notes-' + id).value;
+  save();
+  var btn = document.querySelector('.btn-save-notes');
+  btn.textContent = '✓ Kaydedildi';
+  setTimeout(function(){ btn.textContent = 'Notu Kaydet'; }, 1500);
+}
+
+function deleteCustomer(id) {
+  if (!confirm('Bu müşteriyi silmek istediğinize emin misiniz?')) return;
+  customers = customers.filter(function(c){ return c.id !== id; });
+  selectedId = null;
+  save(); renderList(); renderDetail();
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Yeni Müşteri';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-company').value = '';
+  document.getElementById('f-phone').value = '';
+  document.getElementById('f-email').value = '';
+  document.getElementById('f-packet').value = 'yok';
+  document.getElementById('f-packet').disabled = false;
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('#modal-extra-list input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = false;
+    cb.parentElement.classList.remove('selected');
+  });
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function openEditModal(id) {
+  var c = customers.find(function(c){ return c.id === id; });
+  if (!c) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Müşteriyi Düzenle';
+  document.getElementById('f-name').value = c.name;
+  document.getElementById('f-company').value = c.company || '';
+  document.getElementById('f-phone').value = c.phone || '';
+  document.getElementById('f-email').value = c.email || '';
+  document.getElementById('f-packet').value = c.packet;
+  document.getElementById('f-packet').disabled = false;
+  document.getElementById('f-packet').dataset.original = c.packet;
+  document.getElementById('f-date').value = c.date || '';
+  document.querySelectorAll('#modal-extra-list input[type="checkbox"]').forEach(function(cb) {
+    var idx = parseInt(cb.value);
+    var checked = !!(c.extraServices && c.extraServices[idx]);
+    cb.checked = checked;
+    cb.parentElement.classList.toggle('selected', checked);
+  });
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+}
+
+function saveCustomer() {
+  var name = document.getElementById('f-name').value.trim();
+  if (!name) { alert('Ad Soyad zorunludur.'); return; }
+  var newPacket = document.getElementById('f-packet').value;
+  // Modal'daki ek hizmetleri oku
+  var modalExtras = {};
+  document.querySelectorAll('#modal-extra-list input[type="checkbox"]').forEach(function(cb) {
+    if (cb.checked) modalExtras[parseInt(cb.value)] = true;
+  });
+
+  if (editingId) {
+    var c = customers.find(function(c){ return c.id === editingId; });
+    var oldPacket = c.packet;
+    if (newPacket !== oldPacket) {
+      var confirmed = confirm('⚠️ Paket Değişikliği Uyarısı\n\nMüşteriyi "' + PACKETS[oldPacket].label + '" paketinden "' + PACKETS[newPacket].label + '" paketine geçirmek istediğinize emin misiniz?\n\nDikkat: Mevcut hizmet takip verileri sıfırlanacak!');
+      if (!confirmed) return;
+      c.services = {};
+      c.subItems = {};
+    }
+    c.name = name;
+    c.company = document.getElementById('f-company').value.trim();
+    c.phone = document.getElementById('f-phone').value.trim();
+    c.email = document.getElementById('f-email').value.trim();
+    c.packet = newPacket;
+    c.date = document.getElementById('f-date').value;
+    c.extraServices = modalExtras;
+  } else {
+    customers.push({
+      id: Date.now().toString(),
+      name: name,
+      company: document.getElementById('f-company').value.trim(),
+      phone: document.getElementById('f-phone').value.trim(),
+      email: document.getElementById('f-email').value.trim(),
+      packet: newPacket,
+      date: document.getElementById('f-date').value,
+      services: {},
+      subItems: {},
+      extraServices: modalExtras,
+      customServices: [],
+      notes: ''
+    });
+  }
+  save(); closeModal(); renderList();
+  if (editingId) renderDetail();
+  editingId = null;
+}
+
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+renderList();
+loadFromSheets();
+</script>
+</body>
+</html>
