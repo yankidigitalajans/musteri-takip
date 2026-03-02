@@ -1460,7 +1460,7 @@ var EXTRA_SERVICES = [
 
 var COLORS = ['#4ade80','#facc15','#f472b6','#60a5fa','#fb923c','#a78bfa','#34d399'];
 
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyO5q7uGiP4dRNVyT9qhrSiQj9SbsiqPYSdjn8dhmSarZoYRKVQulyJLcIP7ZQj2MCG/exec';
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7T2N48H1hB0kYxx0adL76ngc2HUlIB-o_lw3mmy3w7e0ge4iUUDHo6pxuQHISwrQhUg/exec';
 
 var customers = JSON.parse(localStorage.getItem('sm_customers') || '[]');
 var selectedId = null;
@@ -2641,7 +2641,7 @@ function saveCustomer() {
       email: document.getElementById('f-email').value.trim(),
       packet: newPacket,
       date: document.getElementById('f-date').value,
-      logo: currentLogoBase64 || null,	
+      logo: currentLogoBase64 || null,
       services: {},
       subItems: {},
       extraServices: modalExtras,
@@ -2662,4 +2662,4 @@ renderList();
 loadFromSheets();
 </script>
 </body>
-</html>
+</html
