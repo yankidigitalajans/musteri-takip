@@ -1478,6 +1478,8 @@ function syncToSheets() {
   showSyncStatus('⏳ Kaydediliyor...');
   fetch(SCRIPT_URL, {
     method: 'POST',
+    redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({
       action: 'save',
       customers: customers,
@@ -1503,18 +1505,21 @@ function syncToSheets() {
 
 function loadFromSheets() {
   showSyncStatus('⏳ Yükleniyor...');
-  fetch(SCRIPT_URL + '?action=load')
+  fetch(SCRIPT_URL + '?action=load', { redirect: 'follow' })
   .then(function(r){ return r.json(); })
   .then(function(d){
     if (d.success) {
-      if (d.customers)    { customers = d.customers; localStorage.setItem('sm_customers', JSON.stringify(customers)); }
-      if (d.teklifler)    { teklifler = d.teklifler; localStorage.setItem('sm_teklifler', JSON.stringify(teklifler)); }
-      if (d.potansiyeller){ potansiyeller = d.potansiyeller; localStorage.setItem('sm_potansiyel', JSON.stringify(potansiyeller)); }
-      if (d.gorevler)     { gorevler = d.gorevler; }
-      if (d.takvim)       { takvimIcerik = d.takvim; }
-      if (d.paketFiyat)   { paketFiyatlari = d.paketFiyat; }
-      if (d.ekFiyat)      { ekFiyatlari = d.ekFiyat; }
+      if (d.customers)     { customers = d.customers; localStorage.setItem('sm_customers', JSON.stringify(customers)); }
+      if (d.teklifler)     { teklifler = d.teklifler; localStorage.setItem('sm_teklifler', JSON.stringify(teklifler)); }
+      if (d.potansiyeller) { potansiyeller = d.potansiyeller; localStorage.setItem('sm_potansiyel', JSON.stringify(potansiyeller)); }
+      if (d.gorevler)      { gorevler = d.gorevler; }
+      if (d.takvim)        { takvimIcerik = d.takvim; }
+      if (d.paketFiyat)    { paketFiyatlari = d.paketFiyat; }
+      if (d.ekFiyat)       { ekFiyatlari = d.ekFiyat; }
       renderList();
+      renderDashboard();
+      renderGorevler();
+      renderTakvim();
       showSyncStatus('✓ Senkronize edildi', true);
     }
   })
@@ -1538,10 +1543,7 @@ var editingPotId = null;
 
 function savePotansiyeller() {
   localStorage.setItem('sm_potansiyel', JSON.stringify(potansiyeller));
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'save', customers: customers, teklifler: teklifler, potansiyeller: potansiyeller })
-  }).catch(function(){});
+  syncToSheets();
 }
 
 function openPotModal(id) {
@@ -1646,11 +1648,7 @@ var currentScreen = 'liste';
 
 function saveTeklifler() {
   localStorage.setItem('sm_teklifler', JSON.stringify(teklifler));
-  // Google Sheets'e de kaydet
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'save', customers: customers, teklifler: teklifler })
-  }).catch(function(){});
+  syncToSheets();
 }
 
 function showScreen(screen) {
@@ -2662,4 +2660,4 @@ renderList();
 loadFromSheets();
 </script>
 </body>
-</html
+</html>
