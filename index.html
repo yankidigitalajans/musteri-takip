@@ -822,8 +822,8 @@ var takvimYil = new Date().getFullYear();
 var takvimAy = new Date().getMonth();
 var editingGorevId = null;
 
-function saveGorevler() { localStorage.setItem('sm_gorevler', JSON.stringify(gorevler)); }
-function saveTakvim() { localStorage.setItem('sm_takvim', JSON.stringify(takvimIcerik)); }
+function saveGorevler() { syncToSheets(); }
+function saveTakvim() { syncToSheets(); }
 
 // ===== DASHBOARD =====
 var paketFiyatlari = JSON.parse(localStorage.getItem('sm_paket_fiyat') || '{"baslangic":"","gelisme":"","premium":""}');
@@ -854,6 +854,7 @@ function togglePaketDuzenle() {
     });
     localStorage.setItem('sm_paket_fiyat', JSON.stringify(paketFiyatlari));
     localStorage.setItem('sm_ek_fiyat', JSON.stringify(ekFiyatlari));
+    syncToSheets();
   }
   document.getElementById('paket-duzenle-btn').textContent = paketDuzenleModu ? '💾 Kaydet' : '✏ Düzenle';
   renderPaketlerModal();
@@ -1477,7 +1478,16 @@ function syncToSheets() {
   showSyncStatus('⏳ Kaydediliyor...');
   fetch(SCRIPT_URL, {
     method: 'POST',
-    body: JSON.stringify({ action: 'save', customers: customers })
+    body: JSON.stringify({
+      action: 'save',
+      customers: customers,
+      teklifler: teklifler,
+      gorevler: gorevler,
+      takvim: takvimIcerik,
+      paketFiyat: paketFiyatlari,
+      ekFiyat: ekFiyatlari,
+      potansiyeller: potansiyeller
+    })
   })
   .then(function(r){ return r.json(); })
   .then(function(d){
@@ -1497,9 +1507,13 @@ function loadFromSheets() {
   .then(function(r){ return r.json(); })
   .then(function(d){
     if (d.success) {
-      if (d.customers) { customers = d.customers; localStorage.setItem('sm_customers', JSON.stringify(customers)); }
-      if (d.teklifler) { teklifler = d.teklifler; localStorage.setItem('sm_teklifler', JSON.stringify(teklifler)); }
-      if (d.potansiyeller) { potansiyeller = d.potansiyeller; localStorage.setItem('sm_potansiyel', JSON.stringify(potansiyeller)); }
+      if (d.customers)    { customers = d.customers; localStorage.setItem('sm_customers', JSON.stringify(customers)); }
+      if (d.teklifler)    { teklifler = d.teklifler; localStorage.setItem('sm_teklifler', JSON.stringify(teklifler)); }
+      if (d.potansiyeller){ potansiyeller = d.potansiyeller; localStorage.setItem('sm_potansiyel', JSON.stringify(potansiyeller)); }
+      if (d.gorevler)     { gorevler = d.gorevler; }
+      if (d.takvim)       { takvimIcerik = d.takvim; }
+      if (d.paketFiyat)   { paketFiyatlari = d.paketFiyat; }
+      if (d.ekFiyat)      { ekFiyatlari = d.ekFiyat; }
       renderList();
       showSyncStatus('✓ Senkronize edildi', true);
     }
