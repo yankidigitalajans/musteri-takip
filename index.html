@@ -1476,62 +1476,51 @@ function syncToSheets() {
   if (isSyncing) return;
   isSyncing = true;
   showSyncStatus('⏳ Kaydediliyor...');
-  var payload = encodeURIComponent(JSON.stringify({
-    action: 'save',
-    customers: customers,
-    teklifler: teklifler,
-    gorevler: gorevler,
-    takvim: takvimIcerik,
-    paketFiyat: paketFiyatlari,
-    ekFiyat: ekFiyatlari,
-    potansiyeller: potansiyeller
-  }));
-  var script = document.createElement('script');
-  script.__smcb = 'smcb_' + Date.now();
-  window[script.__smcb] = function(d) {
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({
+      action: 'save',
+      customers: customers,
+      teklifler: teklifler,
+      gorevler: gorevler,
+      takvim: takvimIcerik,
+      paketFiyat: paketFiyatlari,
+      ekFiyat: ekFiyatlari,
+      potansiyeller: potansiyeller
+    })
+  })
+  .then(function() {
     isSyncing = false;
-    delete window[script.__smcb];
-    document.body.removeChild(script);
-    if (d && d.success) showSyncStatus('✓ Kaydedildi', true);
-    else showSyncStatus('⚠ Hata!');
-  };
-  script.src = SCRIPT_URL + '?callback=' + script.__smcb + '&data=' + payload;
-  script.onerror = function() {
+    showSyncStatus('✓ Kaydedildi', true);
+  })
+  .catch(function() {
     isSyncing = false;
     showSyncStatus('⚠ Bağlantı hatası');
-    document.body.removeChild(script);
-  };
-  document.body.appendChild(script);
+  });
 }
 
 function loadFromSheets() {
   showSyncStatus('⏳ Yükleniyor...');
-  var cbName = 'smload_' + Date.now();
-  var script = document.createElement('script');
-  window[cbName] = function(d) {
-    delete window[cbName];
-    document.body.removeChild(script);
+  fetch(SCRIPT_URL + '?action=load')
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
     if (d && d.success) {
-      if (d.customers)      { customers = d.customers; localStorage.setItem('sm_customers', JSON.stringify(customers)); }
-      if (d.teklifler)      { teklifler = d.teklifler; localStorage.setItem('sm_teklifler', JSON.stringify(teklifler)); }
-      if (d.potansiyeller)  { potansiyeller = d.potansiyeller; localStorage.setItem('sm_potansiyel', JSON.stringify(potansiyeller)); }
-      if (d.gorevler)       { gorevler = d.gorevler; localStorage.setItem('sm_gorevler', JSON.stringify(gorevler)); }
-      if (d.takvim)         { takvimIcerik = d.takvim; localStorage.setItem('sm_takvim', JSON.stringify(takvimIcerik)); }
-      if (d.paketFiyat)     { paketFiyatlari = d.paketFiyat; }
-      if (d.ekFiyat)        { ekFiyatlari = d.ekFiyat; }
+      if (d.customers)     { customers = d.customers; localStorage.setItem('sm_customers', JSON.stringify(customers)); }
+      if (d.teklifler)     { teklifler = d.teklifler; localStorage.setItem('sm_teklifler', JSON.stringify(teklifler)); }
+      if (d.potansiyeller) { potansiyeller = d.potansiyeller; localStorage.setItem('sm_potansiyel', JSON.stringify(potansiyeller)); }
+      if (d.gorevler)      { gorevler = d.gorevler; localStorage.setItem('sm_gorevler', JSON.stringify(gorevler)); }
+      if (d.takvim)        { takvimIcerik = d.takvim; localStorage.setItem('sm_takvim', JSON.stringify(takvimIcerik)); }
+      if (d.paketFiyat)    { paketFiyatlari = d.paketFiyat; localStorage.setItem('sm_paket_fiyat', JSON.stringify(paketFiyatlari)); }
+      if (d.ekFiyat)       { ekFiyatlari = d.ekFiyat; localStorage.setItem('sm_ek_fiyat', JSON.stringify(ekFiyatlari)); }
       renderList(); renderDashboard(); renderGorevler(); renderTakvim();
       showSyncStatus('✓ Senkronize edildi', true);
-    } else {
-      showSyncStatus('⚠ Yükleme hatası');
     }
-  };
-  script.onerror = function() {
-    delete window[cbName];
-    document.body.removeChild(script);
+  })
+  .catch(function() {
     showSyncStatus('⚠ Bağlantı hatası, yerel veri kullanılıyor');
-  };
-  script.src = SCRIPT_URL + '?callback=' + cbName + '&action=load';
-  document.body.appendChild(script);
+  });
 }
 
 function showSyncStatus(msg, autoHide) {
