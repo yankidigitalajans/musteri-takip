@@ -2241,12 +2241,34 @@ function renderDetail() {
   var toplamKalan = toplamBorc - toplamOdenen;
 
   var AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  
+  // Müşteri başlangıç tarihine göre aylık dilimleri hesapla
+  // Örn: başlangıç 16.02.2026 → dilimler: 16.02-16.03, 16.03-16.04 ...
   var ayOptions = '';
-  for (var mm = 0; mm < 12; mm++) {
-    var val = '2026-' + String(mm+1).padStart(2,'0');
-    ayOptions += '<option value="' + val + '">' + AYLAR[mm] + ' 2026</option>';
+  var startDate = c.date ? new Date(c.date) : new Date();
+  var startDay = startDate.getDate();
+  
+  // 12 ay üret: başlangıç tarihinden itibaren
+  for (var mm = 0; mm < 24; mm++) {
+    var d1 = new Date(startDate.getFullYear(), startDate.getMonth() + mm, startDay);
+    var d2 = new Date(startDate.getFullYear(), startDate.getMonth() + mm + 1, startDay);
+    var val = d1.getFullYear() + '-' + String(d1.getMonth()+1).padStart(2,'0') + '-' + String(d1.getDate()).padStart(2,'0');
+    var label = String(d1.getDate()).padStart(2,'0') + ' ' + AYLAR[d1.getMonth()] + ' – ' +
+                String(d2.getDate()).padStart(2,'0') + ' ' + AYLAR[d2.getMonth()] + ' ' + d2.getFullYear();
+    ayOptions += '<option value="' + val + '">' + label + '</option>';
   }
-  var defaultAy = '2026-' + String(new Date().getMonth()+1).padStart(2,'0');
+
+  // Varsayılan olarak içinde bulunulan dönemi seç
+  var bugun = new Date();
+  var defaultVal = '';
+  for (var mm2 = 0; mm2 < 24; mm2++) {
+    var d1b = new Date(startDate.getFullYear(), startDate.getMonth() + mm2, startDay);
+    var d2b = new Date(startDate.getFullYear(), startDate.getMonth() + mm2 + 1, startDay);
+    if (bugun >= d1b && bugun < d2b) {
+      defaultVal = d1b.getFullYear() + '-' + String(d1b.getMonth()+1).padStart(2,'0') + '-' + String(d1b.getDate()).padStart(2,'0');
+      break;
+    }
+  }
 
   // Fatura satırları
   var faturaHTML = '';
@@ -2262,7 +2284,17 @@ function renderDetail() {
       var durumLabel = kalan <= 0 ? '✓ Ödendi' : (odenen > 0 ? '≈ Kısmi' : '● Bekliyor');
       var durumColor = kalan <= 0 ? 'var(--baslangic)' : (odenen > 0 ? 'var(--gelisme)' : '#f87171');
       var ayParts = f.ay.split('-');
-      var ayLabel = AYLAR[parseInt(ayParts[1])-1] + ' ' + ayParts[0];
+      var ayLabel;
+      if (ayParts.length === 3) {
+        // Yeni format: YYYY-MM-DD → dilim göster
+        var d1f = new Date(f.ay);
+        var d2f = new Date(d1f.getFullYear(), d1f.getMonth() + 1, d1f.getDate());
+        ayLabel = String(d1f.getDate()).padStart(2,'0') + ' ' + AYLAR[d1f.getMonth()] + ' – ' +
+                  String(d2f.getDate()).padStart(2,'0') + ' ' + AYLAR[d2f.getMonth()] + ' ' + d2f.getFullYear();
+      } else {
+        // Eski format: YYYY-MM
+        ayLabel = AYLAR[parseInt(ayParts[1])-1] + ' ' + ayParts[0];
+      }
 
       faturaHTML += '<div class="fatura-item">';
       faturaHTML += '<div class="fatura-header" onclick="toggleFatura(this)">';
@@ -2323,7 +2355,7 @@ function renderDetail() {
   html += '</div>';
   // Yeni fatura ekleme
   html += '<div class="yeni-fatura-form">';
-  html += '<div class="pay-input-wrap"><label>Ay</label><select id="fatura-ay">' + ayOptions + '</select></div>';
+  html += '<div class="pay-input-wrap"><label>Dönem</label><select id="fatura-ay">' + ayOptions + '</select></div>';
   html += '<div class="pay-input-wrap"><label>Tutar (₺)</label><input type="number" id="fatura-tutar" placeholder="0" min="0"></div>';
   html += '<button class="btn-add-pay" onclick="addFatura(\'' + c.id + '\')">+ Fatura Ekle</button>';
   html += '</div>';
@@ -2337,6 +2369,14 @@ function renderDetail() {
   html += '</div>';
 
   document.getElementById('right-panel').innerHTML = html;
+
+  // Varsayılan dönemi seç
+  var sel = document.getElementById('fatura-ay');
+  if (sel && defaultVal) {
+    for (var oi = 0; oi < sel.options.length; oi++) {
+      if (sel.options[oi].value === defaultVal) { sel.selectedIndex = oi; break; }
+    }
+  }
 }
 
 function togglePaymentSection(header) {
