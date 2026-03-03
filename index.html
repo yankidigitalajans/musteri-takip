@@ -822,8 +822,8 @@ var takvimYil = new Date().getFullYear();
 var takvimAy = new Date().getMonth();
 var editingGorevId = null;
 
-function saveGorevler() { syncToSheets(); }
-function saveTakvim() { syncToSheets(); }
+function saveGorevler() { localStorage.setItem('sm_gorevler', JSON.stringify(gorevler)); syncToSheets(); }
+function saveTakvim() { localStorage.setItem('sm_takvim', JSON.stringify(takvimIcerik)); syncToSheets(); }
 
 // ===== DASHBOARD =====
 var paketFiyatlari = JSON.parse(localStorage.getItem('sm_paket_fiyat') || '{"baslangic":"","gelisme":"","premium":""}');
@@ -1515,8 +1515,8 @@ function loadFromSheets() {
       if (d.customers)      { customers = d.customers; localStorage.setItem('sm_customers', JSON.stringify(customers)); }
       if (d.teklifler)      { teklifler = d.teklifler; localStorage.setItem('sm_teklifler', JSON.stringify(teklifler)); }
       if (d.potansiyeller)  { potansiyeller = d.potansiyeller; localStorage.setItem('sm_potansiyel', JSON.stringify(potansiyeller)); }
-      if (d.gorevler)       { gorevler = d.gorevler; }
-      if (d.takvim)         { takvimIcerik = d.takvim; }
+      if (d.gorevler)       { gorevler = d.gorevler; localStorage.setItem('sm_gorevler', JSON.stringify(gorevler)); }
+      if (d.takvim)         { takvimIcerik = d.takvim; localStorage.setItem('sm_takvim', JSON.stringify(takvimIcerik)); }
       if (d.paketFiyat)     { paketFiyatlari = d.paketFiyat; }
       if (d.ekFiyat)        { ekFiyatlari = d.ekFiyat; }
       renderList(); renderDashboard(); renderGorevler(); renderTakvim();
