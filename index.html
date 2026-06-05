@@ -13,7 +13,7 @@
     --baslangic-bg: rgba(45,158,107,0.08); --gelisme-bg: rgba(196,135,10,0.08); --premium-bg: rgba(181,80,122,0.08);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); }
 
   header { border-bottom: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; }
   .top-nav { display: flex; align-items: center; gap: 2px; padding: 0 16px; overflow-x: auto; border-top: 1px solid var(--border); }
@@ -21,16 +21,19 @@
   .top-nav-btn { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; color: var(--muted); background: transparent; border: none; border-bottom: 2px solid transparent; padding: 9px 14px; cursor: pointer; transition: all .15s; white-space: nowrap; margin-bottom: -1px; }
   .top-nav-btn:hover { color: var(--text); }
   .top-nav-btn.active { color: var(--text); border-bottom-color: var(--text); font-weight: 700; }
-  .app-wrap { display: flex; flex-direction: column; height: calc(100vh - 97px); }
-  .screens { flex: 1; overflow: hidden; position: relative; }
+  html, body { height: 100%; overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+  header { flex-shrink: 0; }
+  .app-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .screens { flex: 1; overflow: hidden; position: relative; min-height: 0; }
   .screen { display: none; height: 100%; }
   .screen.active { display: flex; }
   #screen-muhasebe.active { display: block; overflow-y: auto; }
   #screen-odeme.active { display: flex; }
-  .container { display: grid; grid-template-columns: 340px 1fr; height: 100%; width: 100%; }
+  .container { display: grid; grid-template-columns: 340px 1fr; height: 100%; width: 100%; position: relative; }
   .teklif-screen-wrap { width: 100%; overflow-y: auto; padding-bottom: 20px; }
 
-  .left-panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  .left-panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
   .panel-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .panel-header h2 { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
   .btn-add { background: var(--text); color: var(--bg); border: none; padding: 8px 14px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity .2s; }
@@ -41,7 +44,12 @@
   .search-wrap input::placeholder { color: var(--muted); }
   .search-wrap input:focus { border-color: var(--muted); }
 
-  .customer-list { overflow-y: auto; flex: 1; }
+  .customer-list { overflow-y: scroll; flex: 1; }
+  .customer-list::-webkit-scrollbar { width: 12px; -webkit-appearance: none; }
+  .customer-list::-webkit-scrollbar-track { background: var(--surface2); }
+  .customer-list::-webkit-scrollbar-thumb { background: #b0a89e; border-radius: 6px; border: 3px solid var(--surface2); min-height: 40px; }
+  .customer-list::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  .customer-list { scrollbar-width: auto; scrollbar-color: #b0a89e var(--surface2); }
   .customer-item { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; display: flex; align-items: center; gap: 12px; }
   .customer-item:hover { background: var(--surface2); }
   .customer-item.active { background: var(--surface2); border-left: 3px solid var(--text); }
@@ -56,7 +64,7 @@
   .badge.yok { background: rgba(122,122,144,0.1); color: var(--muted); border: 1px solid rgba(122,122,144,0.25); }
   .empty-list { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 14px; }
 
-  .right-panel { overflow-y: auto; }
+  .right-panel { overflow-y: auto; min-height: 0; }
   .no-selection { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--muted); }
   .no-selection .icon { font-size: 48px; opacity: .3; }
   .no-selection p { font-size: 15px; }
@@ -294,28 +302,45 @@
     .pot-actions { width: 100%; justify-content: flex-end; }
   }
   @media (max-width: 768px) {
-    .app-wrap { height: calc(100vh - 90px); }
     .container { grid-template-columns: 1fr; }
     .left-panel { border-right: none; height: 100%; overflow: hidden; }
-    .right-panel { display: none; position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow-y: auto; top: 90px; }
+    .right-panel { display: none; position: absolute; inset: 0; z-index: 50; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .right-panel.mobile-active { display: block; }
-    .mobile-back { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--baslangic); position: sticky; top: 0; z-index: 10; }
+    .mobile-back { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--surface); font-size: 14px; font-weight: 600; cursor: pointer; color: var(--baslangic); position: sticky; top: 0; z-index: 10; }
     .mobile-back-hidden { display: none !important; }
     .detail { padding: 16px; }
+    .detail-header { flex-direction: column; align-items: stretch; }
+    .detail-actions { flex-wrap: wrap; }
+    .detail-actions button { flex: 1; min-width: 70px; }
     .packet-cards { grid-template-columns: 1fr; }
     .payment-form, .odeme-form { grid-template-columns: 1fr 1fr; }
     .payment-form button, .odeme-form button { grid-column: 1 / -1; }
     .yeni-fatura-form { grid-template-columns: 1fr 1fr; }
     .yeni-fatura-form button { grid-column: 1 / -1; }
-    .payment-summary { grid-template-columns: repeat(3,1fr); }
-    .meta-grid { grid-template-columns: 1fr 1fr; }
+    .payment-summary { grid-template-columns: repeat(3,1fr); gap: 6px; }
+    .pay-stat { padding: 10px; }
+    .pay-stat-val { font-size: 14px; }
+    .meta-grid { grid-template-columns: 1fr; }
     .detail-name { font-size: 20px; }
     .panel-header { padding: 14px 16px; }
     .search-wrap { padding: 10px 16px; }
     .teklif-content { padding: 16px; }
     .teklif-form-grid { grid-template-columns: 1fr; }
     .teklif-screen-wrap { padding-bottom: 20px; }
-    .top-nav-btn { padding: 8px 10px; font-size: 11px; }
+    .top-nav { padding: 0 8px; }
+    .top-nav-btn { padding: 9px 10px; font-size: 12px; }
+    .teklif-topbar { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+    /* Masraf mobil */
+    #screen-masraf > div { padding: 12px !important; }
+    #masraf-ay-ozet { grid-template-columns: 1fr 1fr !important; }
+    #screen-masraf table { font-size: 11px; }
+    #screen-masraf th, #screen-masraf td { padding: 7px 6px !important; }
+    /* Muhasebe mobil */
+    #screen-muhasebe table { display: block; overflow-x: auto; white-space: nowrap; }
+    #muh-ozet { grid-template-columns: 1fr !important; }
+    /* Header mobil */
+    header > div:first-child { flex-wrap: wrap; gap: 8px; padding: 10px 14px !important; }
+    header > div:first-child > div:last-child { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
   }
   .mobile-back { display: none; }
 
@@ -470,6 +495,7 @@
     <button class="top-nav-btn" id="nav-liste" onclick="showScreen('liste')">👥 Müşteriler</button>
 
     <button class="top-nav-btn" id="nav-teklif" onclick="showScreen('teklif')">📋 Teklifler</button>
+    <button class="top-nav-btn" id="nav-hizliteklif" onclick="showScreen('hizliteklif')">⚡ Hızlı Teklif</button>
     <button class="top-nav-btn" id="nav-odeme" onclick="showScreen('odeme')">💰 Ödeme Takip</button>
     <button class="top-nav-btn" id="nav-arsiv" onclick="showScreen('arsiv')">📦 Arşiv</button>
     <button class="top-nav-btn" id="nav-masraf" onclick="showScreen('masraf')">🧾 Masraf</button>
@@ -669,6 +695,44 @@
     <!-- Excel Tablo -->
     <div id="masraf-liste"></div>
   </div>
+</div>
+
+<!-- HIZLI TEKLİF EKRANI -->
+<div class="screen" id="screen-hizliteklif">
+<div class="teklif-screen-wrap">
+  <div class="teklif-topbar">
+    <h2>⚡ Hızlı Teklif</h2>
+    <button class="btn-add" onclick="htPDF()">📄 PDF Oluştur</button>
+  </div>
+  <div class="teklif-content">
+    <!-- Müşteri bilgileri -->
+    <div class="teklif-form-grid" style="margin-bottom:20px">
+      <div><label class="tg-label">Müşteri Adı *</label><input class="tg-input" type="text" id="ht-musteri" placeholder="Ahmet Yılmaz"></div>
+      <div><label class="tg-label">Firma / Marka</label><input class="tg-input" type="text" id="ht-firma" placeholder="Yılmaz Cafe"></div>
+      <div><label class="tg-label">Telefon</label><input class="tg-input" type="text" id="ht-telefon" placeholder="05xx xxx xx xx"></div>
+      <div><label class="tg-label">Tarih</label><input class="tg-input" type="date" id="ht-tarih"></div>
+    </div>
+
+    <!-- Hizmet satırları -->
+    <div class="section-title" style="margin-bottom:10px">Hizmetler</div>
+    <div id="ht-satirlar" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+    <button onclick="htSatirEkle()" style="background:var(--surface2);border:1px dashed var(--border);color:var(--text);padding:10px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;width:100%;transition:border-color .15s" onmouseover="this.style.borderColor='var(--muted)'" onmouseout="this.style.borderColor='var(--border)'">+ Hizmet Satırı Ekle</button>
+
+    <!-- Toplam -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-top:16px">
+      <span style="font-size:14px;font-weight:700">Toplam</span>
+      <span style="font-size:20px;font-weight:700;color:var(--baslangic)" id="ht-toplam">0 ₺</span>
+    </div>
+
+    <!-- Notlar -->
+    <div style="margin-top:16px">
+      <label class="tg-label">Notlar / Açıklama <span style="color:var(--muted);font-weight:400">(opsiyonel)</span></label>
+      <textarea class="tg-input" id="ht-not" rows="3" placeholder="Teklif notları, ödeme koşulları vb..."></textarea>
+    </div>
+
+    <button onclick="htPDF()" style="margin-top:16px;background:var(--text);color:var(--bg);border:none;padding:12px 24px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%">📄 PDF Teklif Oluştur</button>
+  </div>
+</div>
 </div>
 
 </div><!-- /screens -->
@@ -1730,7 +1794,7 @@ function saveTeklifler() {
 
 function showScreen(screen) {
   currentScreen = screen;
-  var screens = ['liste','teklif','potansiyel','arsiv','dashboard','gorev','takvim','paketler','muhasebe','odeme','masraf'];
+  var screens = ['liste','teklif','potansiyel','arsiv','dashboard','gorev','takvim','paketler','muhasebe','odeme','masraf','hizliteklif'];
   screens.forEach(function(s) {
     var el = document.getElementById('screen-'+s);
     if (el) {
@@ -1751,6 +1815,7 @@ function showScreen(screen) {
   if (screen === 'paketler') renderPaketler();
   if (screen === 'odeme') renderOdemeTakip();
   if (screen === 'masraf') renderMasraf();
+  if (screen === 'hizliteklif') renderHizliTeklif();
   if (screen === 'liste' && isMobile()) {
     document.getElementById('right-panel').classList.remove('mobile-active');
     document.getElementById('mobile-back').classList.add('mobile-back-hidden');
@@ -2961,10 +3026,22 @@ function renderOdemeList() {
   if (el) el.innerHTML = html || '<div class="empty-list">Müşteri bulunamadı.</div>';
 }
 
+function odemeGoBack() {
+  var dp = document.getElementById('odeme-detay');
+  dp.classList.remove('mobile-active');
+  _odemeSeciliId = null;
+  renderOdemeList();
+}
+
 function selectOdemeMusteri(id) {
   _odemeSeciliId = id;
   renderOdemeList();
   renderOdemeDetay(id);
+  if (isMobile()) {
+    var dp = document.getElementById('odeme-detay');
+    dp.classList.add('mobile-active');
+    dp.scrollTop = 0;
+  }
 }
 
 function renderOdemeDetay(id) {
@@ -3031,7 +3108,8 @@ function renderOdemeDetay(id) {
     });
   }
 
-  var html = '<div class="detail" style="overflow-y:auto">';
+  var html = '<div class="mobile-back" onclick="odemeGoBack()">← Müşteri Listesi</div>';
+  html += '<div class="detail" style="overflow-y:auto">';
   html += '<div class="detail-header"><div class="detail-header-left">';
   html += c.logo ? '<div class="detail-avatar" style="background:#fff;border:1px solid var(--border);overflow:hidden"><img src="'+c.logo+'" style="width:100%;height:100%;object-fit:cover"></div>'
     : '<div class="detail-avatar" style="background:'+color+'22;color:'+color+'">'+getInitials(c.name)+'</div>';
@@ -3233,6 +3311,134 @@ function renderMasraf() {
   listeEl.innerHTML = tablo;
 }
 // ===================== MASRAF SON =====================
+
+// ===================== HIZLI TEKLİF =====================
+var _htSatirlar = [];
+
+function renderHizliTeklif() {
+  var ti = document.getElementById('ht-tarih');
+  if (ti && !ti.value) ti.value = new Date().toISOString().split('T')[0];
+  if (_htSatirlar.length === 0) {
+    _htSatirlar = [{ad:'', aciklama:'', fiyat:''}];
+  }
+  renderHtSatirlar();
+}
+
+function htSatirEkle() {
+  _htSatirlar.push({ad:'', aciklama:'', fiyat:''});
+  renderHtSatirlar();
+}
+
+function htSatirSil(idx) {
+  _htSatirlar.splice(idx, 1);
+  if (_htSatirlar.length === 0) _htSatirlar.push({ad:'', aciklama:'', fiyat:''});
+  renderHtSatirlar();
+}
+
+function htSatirGuncelle(idx, alan, deger) {
+  if (_htSatirlar[idx]) {
+    _htSatirlar[idx][alan] = deger;
+    if (alan === 'fiyat') htHesapla();
+  }
+}
+
+function htHesapla() {
+  var toplam = _htSatirlar.reduce(function(s, sat) {
+    return s + (parseFloat(sat.fiyat) || 0);
+  }, 0);
+  var el = document.getElementById('ht-toplam');
+  if (el) el.textContent = formatMoney(toplam) + ' ₺';
+}
+
+function renderHtSatirlar() {
+  var el = document.getElementById('ht-satirlar');
+  if (!el) return;
+  el.innerHTML = _htSatirlar.map(function(sat, i) {
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;display:grid;grid-template-columns:1fr 1fr 130px 36px;gap:8px;align-items:start">'
+      + '<div><input class="tg-input" type="text" placeholder="Hizmet adı" value="'+(sat.ad||'').replace(/"/g,'&quot;')+'" oninput="htSatirGuncelle('+i+',\'ad\',this.value)" style="font-size:13px;padding:8px 10px"></div>'
+      + '<div><input class="tg-input" type="text" placeholder="Açıklama (opsiyonel)" value="'+(sat.aciklama||'').replace(/"/g,'&quot;')+'" oninput="htSatirGuncelle('+i+',\'aciklama\',this.value)" style="font-size:13px;padding:8px 10px"></div>'
+      + '<div><input class="tg-input" type="number" placeholder="Fiyat ₺" value="'+(sat.fiyat||'')+'" oninput="htSatirGuncelle('+i+',\'fiyat\',this.value)" style="font-size:13px;padding:8px 10px;text-align:right"></div>'
+      + '<button onclick="htSatirSil('+i+')" style="background:transparent;border:1px solid var(--border);border-radius:8px;color:#f87171;cursor:pointer;font-size:14px;height:38px">✕</button>'
+      + '</div>';
+  }).join('');
+  htHesapla();
+}
+
+function htPDF() {
+  var musteri = document.getElementById('ht-musteri').value.trim();
+  if (!musteri) { alert('Müşteri adı zorunludur.'); return; }
+  var firma = document.getElementById('ht-firma').value.trim();
+  var telefon = document.getElementById('ht-telefon').value.trim();
+  var tarihVal = document.getElementById('ht-tarih').value;
+  var not = document.getElementById('ht-not').value.trim();
+
+  var gecerliSatirlar = _htSatirlar.filter(function(s){ return s.ad.trim(); });
+  if (gecerliSatirlar.length === 0) { alert('En az bir hizmet ekleyin.'); return; }
+
+  var tarih = formatDate(tarihVal);
+  var no = 'TKL-' + Date.now().toString().slice(-4);
+  var toplam = gecerliSatirlar.reduce(function(s,sat){ return s + (parseFloat(sat.fiyat)||0); }, 0);
+
+  var hizmetlerHTML = gecerliSatirlar.map(function(s) {
+    var row = '<tr><td style="padding:11px 14px;border-bottom:1px solid #eee">'
+      + '<div style="font-size:13px;font-weight:700;color:#222"><span style="color:#bbb;margin-right:8px">✦</span>' + s.ad + '</div>';
+    if (s.aciklama) row += '<div style="font-size:11px;color:#888;margin-top:3px;margin-left:22px">' + s.aciklama + '</div>';
+    row += '</td><td style="padding:11px 14px;border-bottom:1px solid #eee;text-align:right;font-size:13px;font-weight:700;color:#222;white-space:nowrap;vertical-align:top">'
+      + (s.fiyat ? formatMoney(s.fiyat)+' ₺' : '') + '</td></tr>';
+    return row;
+  }).join('');
+
+  var html = '<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">'
+    + '<title>Teklif - ' + musteri + '</title>'
+    + '<style>'
+    + '*{box-sizing:border-box;margin:0;padding:0}'
+    + 'body{font-family:Arial,sans-serif;background:#fff;color:#333}'
+    + '@page{size:A4 portrait;margin:0}'
+    + 'html,body{width:210mm}'
+    + '.page{width:210mm;padding:14mm 15mm 12mm;position:relative}'
+    + '.section-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:5px}'
+    + 'table{width:100%;border-collapse:collapse}'
+    + '.footer{text-align:center;font-size:10px;color:#bbb;padding-top:10px;border-top:1px solid #eee;margin-top:14px}'
+    + '@media print{.no-print{display:none!important}html,body{width:210mm;height:297mm;overflow:hidden}.page{position:absolute;top:0;left:0}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+    + '@media screen{body{background:#e0e0e0}.page{max-width:210mm;min-height:297mm;margin:20px auto;box-shadow:0 0 24px rgba(0,0,0,0.15);background:#fff}}'
+    + '</style></head><body>'
+    + '<div class="page"><div style="display:flex;flex-direction:column;gap:14px">'
+    // Header
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:2px solid #111">'
+    + '<div><img src="https://i.ibb.co/DgT8mbZ7/MG-3966.jpg" style="height:54px;object-fit:contain">'
+    + '<div style="font-size:10px;color:#999;margin-top:4px">Dijital Pazarlama Ajansı</div></div>'
+    + '<div style="text-align:right"><div style="font-size:26px;font-weight:700;letter-spacing:-1px;color:#111">TEKLİF</div>'
+    + '<div style="font-size:12px;color:#888;margin-top:4px">No: ' + no + ' &nbsp;·&nbsp; Tarih: ' + tarih + '</div></div></div>'
+    // Müşteri
+    + '<div style="background:#f8f8f8;border-radius:8px;padding:12px 16px">'
+    + '<div class="section-label">Teklif Sunulan</div>'
+    + '<div style="font-size:17px;font-weight:700;color:#111">' + musteri + '</div>'
+    + (firma ? '<div style="font-size:13px;color:#555;margin-top:2px">' + firma + '</div>' : '')
+    + (telefon ? '<div style="font-size:12px;color:#888;margin-top:2px">📞 ' + telefon + '</div>' : '')
+    + '</div>'
+    // Hizmetler
+    + '<div><div class="section-label">Hizmetler</div>'
+    + '<table style="border:1px solid #eee;border-radius:8px;overflow:hidden">'
+    + '<thead><tr style="background:#f5f5f5"><th style="padding:8px 14px;text-align:left;font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.8px">Hizmet</th>'
+    + '<th style="padding:8px 14px;text-align:right;font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.8px">Tutar</th></tr></thead>'
+    + '<tbody>' + hizmetlerHTML + '</tbody></table>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border:1px solid #eee;border-top:2px solid #111;margin-top:-1px">'
+    + '<span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#555">Toplam Tutar</span>'
+    + '<span style="font-size:18px;font-weight:700;color:#111">' + formatMoney(toplam) + ' ₺ <span style="font-size:11px;color:#aaa;font-weight:400">+ KDV</span></span>'
+    + '</div></div>'
+    // Notlar
+    + (not ? '<div style="background:#f8f8f8;border-radius:8px;padding:12px 16px"><div class="section-label">Notlar</div>'
+      + '<div style="font-size:13px;color:#555;line-height:1.7;white-space:pre-wrap">' + not + '</div></div>' : '')
+    + '</div>'
+    + '<div class="footer">www.yankidijitalajans.com</div></div>'
+    + '<div class="no-print" style="text-align:center;padding:20px"><button onclick="window.print()" style="background:#111;color:#fff;border:none;padding:11px 28px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🖨 Yazdır / PDF Olarak Kaydet</button></div>'
+    + '</body></html>';
+
+  var win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
+// ===================== HIZLI TEKLİF SON =====================
 
 
 
